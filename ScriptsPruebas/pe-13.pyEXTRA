@@ -1,0 +1,36 @@
+Añade esta nueva función a tu clase Graph. Este es el núcleo de tu Objetivo 2.
+
+# <<< FUNCIÓN NUEVA: Objetivo 2 >>>
+    def detect_zone_change(self, bpm):
+        max_hr = 220 - self.age
+        
+        # Lógica de Umbrales (puedes ajustar esto)
+        if bpm < (max_hr * 0.6):
+            new_zone = 1
+        elif bpm < (max_hr * 0.7):
+            new_zone = 2
+        elif bpm < (max_hr * 0.8):
+            new_zone = 3
+        elif bpm < (max_hr * 0.9):
+            new_zone = 4
+        else:
+            new_zone = 5
+
+        # Lógica de Detección de Evento
+        if new_zone != self.current_zone:
+            print(f"¡CAMBIO DE ZONA DETECTADO! De {self.current_zone} a {new_zone} (BPM: {bpm:.2f})")
+            
+            # --- Objetivo 3: Publicar en MQTT ---
+            if self.mqtt_client:
+                payload = {
+                    "user_id": "paciente_01",
+                    "zona_anterior": self.current_zone,
+                    "zona_nueva": new_zone,
+                    "bpm_actual": round(bpm, 2),
+                    "timestamp": time.time()
+                }
+                # Convertir a JSON y publicar
+                self.mqtt_client.publish(self.mqtt_topic, json.dumps(payload))
+                print(f"Evento publicado en MQTT: {self.mqtt_topic}")
+            
+            self.current_zone = new_zone # Actualizamos el estado

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  # Broker MQTT
+  mqtt-broker:
+    image: eclipse-mosquitto:2.0 # Usa la imagen oficial de Mosquitto
+    container_name: local-mqtt-broker
+    ports:
+      - "1883:1883" # Puerto estándar de MQTT
+      - "9001:9001" # Puerto para WebSockets
+    volumes:
+      # 1. Montaje de archivo de configuración /mosquittto/config/mosquitto.conf
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      # 2. Creacion de un volumen para datos (logs, persistencia)
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    restart: unless-stopped
