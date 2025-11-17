@@ -11,3 +11,6 @@ python -m pip install -e .
 # ###########################################################################
 
 
+# Para montar todos los servicios:
+# en el path razi ejecutar:
+docker-compose up -d
