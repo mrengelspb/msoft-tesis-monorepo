@@ -1,0 +1,25 @@
+Ignorar carpetas de compilación locales
+
+brainflow/build
+brainflow/installed
+brainflow/python_package/build
+brainflow/python_package/dist
+brainflow/python_package/*.egg-info
+
+Ignorar caches de Python
+
+pycache
+*.pyc
+*.pyo
+*.pyd
+
+Ignorar Git
+
+.git
+.gitignore
+
+Ignorar entornos virtuales
+
+venv
+env
+.env

@@ -1,20 +1,30 @@
-# Etapa 1: Compilación
-FROM golang:1.24-alpine AS builder
+# ==========================================
+# ETAPA 1: Compilación de Go
+# ==========================================
+FROM golang:alpine AS builder
+
 WORKDIR /app
 
-# Copia los archivos de dependencias y las descarga
-COPY go.mod go.sum ./
-RUN go mod download
+# Copiamos el código fuente
+COPY logger/main.go .
 
-# Copia el código fuente y compila
-COPY *.go .
-RUN go build -o /logger-service .
+# Inicializamos el módulo y descargamos dependencias
+# (Esto crea el go.mod y go.sum si no existen)
+RUN go mod init logger_service || true
+RUN go mod tidy
 
-# Etapa 2: Ejecución (imagen ligera)
+# Compilamos el binario estático
+RUN CGO_ENABLED=0 GOOS=linux go build -o logger_app main.go
+
+# ==========================================
+# ETAPA 2: Imagen Final Ligera
+# ==========================================
 FROM alpine:latest
-WORKDIR /root/
-# Copia el binario compilado de la etapa anterior
-COPY --from=builder /logger-service .
 
-# Comando para correr el servicio
-CMD ["./logger-service"]
+WORKDIR /root/
+
+# Copiamos el binario compilado
+COPY --from=builder /app/logger_app .
+
+# Ejecutamos
+CMD ["./logger_app"]

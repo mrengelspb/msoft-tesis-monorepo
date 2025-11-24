@@ -1,22 +1,25 @@
 version: '3.8'
 
 services:
-  # 1. Broker MQTT
+  # ------------------------------------------------
+  # 1. BROKER MQTT
+  # ------------------------------------------------
   mqtt-broker:
     image: eclipse-mosquitto:2.0
     container_name: local-mqtt-broker
     ports:
-      - "1883:1883" # Puerto estándar de MQTT
-      - "9001:9001" # Puerto para WebSockets
+      - "1883:1883" # TCP
+      - "9001:9001" # Websockets
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
-      - ./mosquitto/log:/mosquitto/log
     restart: unless-stopped
 
-  # 2. Base de Datos de Eventos (PostgreSQL)
+  # ------------------------------------------------
+  # 2. BASE DE DATOS (POSTGRES)
+  # ------------------------------------------------
   eventsdb:
-    image: postgres:16 # Usé 16, la versión estable más reciente
+    image: postgres:16
     container_name: msoft-postgres-db
     restart: unless-stopped
     ports:
@@ -26,52 +29,56 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=msoft
     volumes:
-      # Este archivo SQL se ejecuta 1 SOLA VEZ para crear la tabla
+      # Script inicial para crear tablas
       - ./eventdb-backup.sql:/docker-entrypoint-initdb.d/init.sql
-      # Este volumen persistente GUARDA LOS DATOS de la BD
+      # Persistencia de datos
       - msoft-pgdata:/var/lib/postgresql/data
     healthcheck:
-      # Comando para verificar que la BD esté lista
       test: ["CMD-SHELL", "pg_isready -U postgres -d msoft"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # 3. Servicio Logger (Go)
+  # ------------------------------------------------
+  # 3. LOGGER SERVICE (GOLANG)
+  # ------------------------------------------------
   logger-service:
-    build: ./logger
+    build:
+      context: .           # Contexto raíz
+      dockerfile: logger/Dockerfile
     container_name: go-logger-service
     restart: unless-stopped
     depends_on:
       eventsdb:
-        # Espera a que el 'healthcheck' de la BD sea exitoso
-        condition: service_healthy 
+        condition: service_healthy # Espera a que la BD esté lista
       mqtt-broker:
         condition: service_started
     environment:
-      # Variables para que el logger (Go) se conecte a la BD
       - DB_HOST=eventsdb
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=msoft
       - DB_PORT=5432
-      # Variables para que el logger se conecte a MQTT
       - MQTT_HOST=mqtt-broker
       - MQTT_PORT=1883
 
-  # 4. Servicio de Análisis (Python)
+  # ------------------------------------------------
+  # 4. ANALYZER SERVICE (PYTHON + BRAINFLOW MODIFICADA PARA TESIS)
+  # ------------------------------------------------
   analyzer-service:
-    build: ./analyzer_service
+    build:
+      context: .           # Contexto raíz para ver 'brainflow/'
+      dockerfile: analyzer_service/Dockerfile
     container_name: python-analyzer-service
     restart: unless-stopped
     depends_on:
-      mqtt-broker:
-        condition: service_started
+      - mqtt-broker
     environment:
-      # Variables para que el analizador se conecte a MQTT
       - MQTT_HOST=mqtt-broker
-      - MQTT_PORT=1883
+      - TEST_AGE=30
+      - USER_ID=atleta_01
+      - DATA_WINDOW_POINTS=1024
+      - PYTHONUNBUFFERED=1 # Logs inmediatos
 
-# Definición del volumen persistente para los datos de Postgres
 volumes:
   msoft-pgdata:
