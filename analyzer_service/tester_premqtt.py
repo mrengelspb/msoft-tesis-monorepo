@@ -22,7 +22,7 @@ class LocalGuiTester(QtWidgets.QWidget):
         self.board = BrainflowHandler(num_points=1024)
         self.board.start(age=30) # Inicio la simulación para un atleta de 30 años
 
-        # Instancio el analizador matemático (versión V5 "Tanque")
+        # Instancio el analizador matemático
         self.analyzer = DataAnalyzer(sampling_rate=self.board.sampling_rate, age=30)
 
         # --- Configuración de la GUI ---

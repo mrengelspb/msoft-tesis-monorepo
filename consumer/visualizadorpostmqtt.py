@@ -90,6 +90,8 @@ class MqttVisualizer(QtWidgets.QWidget):
             if msg.topic == MQTT_TOPIC_DATA:
                 # Llegan pequeños paquetes de datos (chunks)
                 chunk = payload.get("ecg_data", [])
+                print(f"Received chunk of {len(chunk)} points")
+                print(chunk)
                 self.data_buffer.extend(chunk)
                 
             elif msg.topic == MQTT_TOPIC_STATUS:
