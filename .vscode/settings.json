@@ -92,5 +92,6 @@
         "xtree": "cpp",
         "xutility": "cpp"
     },
-    "maven.view": "hierarchical"
+    "maven.view": "hierarchical",
+    "cmake.sourceDirectory": "D:/SolucionesPlanB/SW/MAXV3/msoft-tesis-monorepo/brainflow/third_party/kissfft"
 }
